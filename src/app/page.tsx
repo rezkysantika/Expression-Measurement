@@ -52,11 +52,9 @@ const App = () => {
         throw new Error(msg);
       }
 
-      // Hume returns { job_id: "..." } (fallback to "id" just in case)
       const jobId = (data as any)?.job_id ?? (data as any)?.id;
       if (!jobId) throw new Error("No job_id returned from Hume.");
 
-      // ✅ Route to the results page with jobId & label
       router.push(`/expression?jobId=${encodeURIComponent(jobId)}&label=${encodeURIComponent(label)}`);
     } catch (err: any) {
       setError(err?.message ?? "Something went wrong.");
@@ -166,7 +164,7 @@ const App = () => {
               disabled={loading}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors duration-200 disabled:opacity-60"
             >
-              {loading ? "Analyzing…" : "Analyze"}
+              {loading ? "Analyzing..." : "Analyze"}
             </button>
           </div>
         </form>

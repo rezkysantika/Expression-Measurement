@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   expressionLabels,
@@ -110,6 +111,7 @@ function collectTranscriptFromProsody(payload: any): TranscriptItem[] {
   out.sort((a, b) => (a.start ?? 0) - (b.start ?? 0));
   return out;
 }
+
 function collectEmotions(payload: any, modelKey: "prosody" | "language" | "burst"): EmotionItem[] {
   const bag = new Map<string, EmotionItem>();
   eachModelPrediction(payload, modelKey, (p) => {
@@ -137,6 +139,7 @@ export default function ExpressionPage() {
   const params = useSearchParams();
   const jobId = params.get("jobId") ?? "";
   const label = params.get("label") ?? "";
+  const activityHref = `/activity?jobId=${encodeURIComponent(jobId)}&label=${encodeURIComponent(label)}`;
 
   const [status, setStatus] = useState<JobStatus>("UNKNOWN");
   const [predictions, setPredictions] = useState<any>(null);
@@ -153,7 +156,7 @@ export default function ExpressionPage() {
         setError(null);
         setLastChecked(Date.now());
 
-        // status
+        // status check
         const sRes = await fetch(`/api/jobs/${encodeURIComponent(jobId)}`, { cache: "no-store" });
         if (sRes.ok) {
           const sCT = sRes.headers.get("content-type") || "";
@@ -207,7 +210,7 @@ export default function ExpressionPage() {
         <div className="flex items-center justify-between mb-4">
           <div className="space-y-1">
             <p className="text-lg"><span className="font-semibold">Label:</span> {label || "—"}</p>
-            <p className="text-lg"><span className="font-semibold">JOB ID:</span> {jobId || "—"}</p>
+            <p className="text-lg"><span className="font-semibold">Job ID:</span> {jobId || "—"}</p>
           </div>
           <div className="flex items-center gap-3">
             <StatusChip status={status} />
@@ -227,7 +230,7 @@ export default function ExpressionPage() {
 
         {status === "FAILED" && (
           <div className="mb-6 rounded-2xl border border-black p-4 text-sm text-gray-700">
-            Job failed. Check your input or model configuration.
+            Job failed. Check input or model configuration.
           </div>
         )}
 
@@ -235,9 +238,9 @@ export default function ExpressionPage() {
           <div>
             <p className="text-lg font-semibold">Transcript</p>
             <div className="mt-3 rounded-2xl border border-black p-6 h-[480px] overflow-auto">
-              {!predictions && <p className="text-sm text-gray-600">Waiting for predictions…</p>}
+              {!predictions && <p className="text-sm text-gray-600">Waiting for expressions predictions...</p>}
               {predictions && transcript.length === 0 && (
-                <p className="text-sm text-gray-600">No transcript found (prosody text missing).</p>
+                <p className="text-sm text-gray-600">No transcript found / prosody text missing.</p>
               )}
               <div className="space-y-6">
                 {transcript.map((t, i) => (
@@ -252,11 +255,10 @@ export default function ExpressionPage() {
               </div>
             </div>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <CategoryCard title="Prosody" items={prosody} />
-            <CategoryCard title="Language" items={language} />
-            <CategoryCard title="Vocal Burst" items={vocalBurst} />
+            <CategoryCard title="Prosody" items={prosody} href={activityHref} />
+            <CategoryCard title="Language" items={language} href={activityHref} />
+            <CategoryCard title="Vocal Burst" items={vocalBurst} href={activityHref} />
           </div>
         </div>
       </div>
@@ -264,12 +266,12 @@ export default function ExpressionPage() {
   );
 }
 
-function CategoryCard({ title, items }: { title: string; items: EmotionItem[] }) {
+function CategoryCard({ title, items, href }: { title: string; items: EmotionItem[]; href: string }) {
   return (
     <div>
       <h3 className="text-center text-lg font-semibold mb-4">{title}</h3>
       <div className="space-y-5">
-        {items.length === 0 && <div className="text-sm text-gray-600">No predictions.</div>}
+        {items.length === 0 && <div className="text-sm text-gray-600">No predictions</div>}
         {items.map((e, i) => (
           <div key={i} className="space-y-1">
             <div className="flex items-center justify-between text-sm">
@@ -283,18 +285,17 @@ function CategoryCard({ title, items }: { title: string; items: EmotionItem[] })
               </span>
               <span className="tabular-nums">{e.confidence.toFixed(2)}</span>
             </div>
-            {/* <ConfidenceBar value={e.confidence} /> */}
             <ConfidenceBar value={e.confidence} color={e.color} />
           </div>
         ))}
       </div>
-      <button
-        type="button"
-        className="mt-6 w-full border border-black rounded-full px-4 py-2 text-sm hover:bg-gray-50"
-        onClick={() => alert(`TODO: show ${title} activity timeline`)}
+
+      <Link
+        href={href}
+        className="mt-6 block w-full text-center border border-black rounded-full px-4 py-2 text-sm hover:bg-gray-50"
       >
         View Activity ↗
-      </button>
+      </Link>
     </div>
   );
 }
