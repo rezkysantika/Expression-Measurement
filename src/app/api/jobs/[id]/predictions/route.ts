@@ -1,5 +1,3 @@
-import { NextRequest } from "next/server";
-
 export const runtime = "nodejs";
 
 function must(name: string, v?: string | null) {
@@ -8,13 +6,14 @@ function must(name: string, v?: string | null) {
 }
 
 export async function GET(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
+  _req: Request,
+  ctx: { params: Record<string, string> } 
 ) {
   try {
     const API_KEY  = must("HUME_API_KEY", process.env.HUME_API_KEY);
     const API_BASE = process.env.HUME_API_BASE ?? "https://api.hume.ai";
-    const jobId = params.id;
+
+    const jobId = ctx.params.id; 
 
     if (!jobId) {
       return new Response(JSON.stringify({ error: "Missing job id" }), {
@@ -33,15 +32,12 @@ export async function GET(
     const ct = res.headers.get("content-type") || "";
     const data = ct.includes("application/json") ? await res.json() : await res.text();
 
-    return new Response(
-      typeof data === "string" ? data : JSON.stringify(data),
-      {
-        status: res.status,
-        headers: {
-          "Content-Type": ct.includes("application/json") ? "application/json" : "text/plain",
-        },
-      }
-    );
+    return new Response(typeof data === "string" ? data : JSON.stringify(data), {
+      status: res.status,
+      headers: {
+        "Content-Type": ct.includes("application/json") ? "application/json" : "text/plain",
+      },
+    });
   } catch (err: any) {
     console.error(err);
     return new Response(JSON.stringify({ error: err?.message ?? "Unexpected error" }), {
