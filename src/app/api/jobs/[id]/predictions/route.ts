@@ -5,15 +5,16 @@ function must(name: string, v?: string | null) {
   return v;
 }
 
-export async function GET(
-  _req: Request,
-  ctx: { params: Record<string, string> } 
-) {
+export async function GET(req: Request) {
   try {
     const API_KEY  = must("HUME_API_KEY", process.env.HUME_API_KEY);
     const API_BASE = process.env.HUME_API_BASE ?? "https://api.hume.ai";
 
-    const jobId = ctx.params.id; 
+    // Robustly extract the :id from /api/jobs/:id/predictions
+    const pathname = new URL(req.url).pathname;
+    const parts = pathname.split("/");
+    const jobsIdx = parts.lastIndexOf("jobs");
+    const jobId = jobsIdx >= 0 ? decodeURIComponent(parts[jobsIdx + 1] || "") : "";
 
     if (!jobId) {
       return new Response(JSON.stringify({ error: "Missing job id" }), {
@@ -32,12 +33,15 @@ export async function GET(
     const ct = res.headers.get("content-type") || "";
     const data = ct.includes("application/json") ? await res.json() : await res.text();
 
-    return new Response(typeof data === "string" ? data : JSON.stringify(data), {
-      status: res.status,
-      headers: {
-        "Content-Type": ct.includes("application/json") ? "application/json" : "text/plain",
-      },
-    });
+    return new Response(
+      typeof data === "string" ? data : JSON.stringify(data),
+      {
+        status: res.status,
+        headers: {
+          "Content-Type": ct.includes("application/json") ? "application/json" : "text/plain",
+        },
+      }
+    );
   } catch (err: any) {
     console.error(err);
     return new Response(JSON.stringify({ error: err?.message ?? "Unexpected error" }), {
