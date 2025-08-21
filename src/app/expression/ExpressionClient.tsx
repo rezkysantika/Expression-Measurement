@@ -444,6 +444,9 @@ export default function ExpressionClient() {
     `/activity?jobId=${encodeURIComponent(jobId)}&label=${encodeURIComponent(label)}` +
     (audioResolved ? `&audio=${encodeURIComponent(audioResolved)}` : "");
 
+  const activityHref2 = 
+    `/language-activity?jobId=${encodeURIComponent(jobId)}&label=${encodeURIComponent(label)}` +
+    (audioResolved ? `&audio=${encodeURIComponent(audioResolved)}` : "");
 
   return (
     <div className="min-h-screen bg-white text-black p-8">
@@ -565,7 +568,7 @@ export default function ExpressionClient() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <CategoryCard title="Prosody" items={prosody} href={activityHref} />
-            <CategoryCard title="Language" items={language} href={activityHref} />
+            <CategoryCard title="Language" items={language} href={activityHref2} />
             <CategoryCard title="Vocal Burst" items={vocalBurst} href={activityHref} />
           </div>
         </div>

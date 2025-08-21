@@ -10,7 +10,6 @@ export async function GET(req: Request) {
     const API_KEY  = must("HUME_API_KEY", process.env.HUME_API_KEY);
     const API_BASE = process.env.HUME_API_BASE ?? "https://api.hume.ai";
 
-    // Robustly extract the :id from /api/jobs/:id/predictions
     const pathname = new URL(req.url).pathname;
     const parts = pathname.split("/");
     const jobsIdx = parts.lastIndexOf("jobs");
